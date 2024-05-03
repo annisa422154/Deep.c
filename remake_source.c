@@ -70,11 +70,8 @@ int main(int argc, char *argv[])
 		printf("Tambahkan parameter jumlah threads\n");
 		return 1; // Keluar dengan kode kesalahan
 		//team = performance_core;
-	} else {
-		selection = atoi(argv[1]);
-        nworkers = atoi(argv[2]);
-		
-	}
+	} else 
+	selection = atoi(argv[1]);
 	switch (selection) {
 		case 1 :team = performance_core;
 				break;
@@ -85,9 +82,9 @@ int main(int argc, char *argv[])
 		case 4 :team = hybrid_core_lb;
 				break;
 		default:printf("Pilihan tidak valid\n");
-            	return 1; // Keluar dengan kode kesalahan
+            	return 1; // Keluar dengan kode kesalaha
 	}
-
+	nworkers = atoi(argv[2]);
 	char *inFile = argv[3];
 	char *outFile = argv[4];
 
