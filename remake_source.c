@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 {
 
 	cpu_set_t mask;
-	int *team = efficient_core;
+	int *team = hybrid_core_bl;
 	int selection = 5;
 	long num_step;
 
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 	// To work with each pixel in the range of 0~1
 	double *inBuf_tmp = (double *)malloc(inCols*inRows*sizeof(double));
 	double *outBuf_tmp = (double *)malloc(outCols*outRows*sizeof(double));
-
+	start_timer();
 	//#pragma omp parallel for
 	for (int fcnt = 0; fcnt < num; fcnt++)
 	{
@@ -368,8 +368,6 @@ int main(int argc, char *argv[])
          CPU_SET(team[i],&mask);
     int result = sched_setaffinity(0,sizeof(mask),&mask);
 	num_step = 2000000000l;
-    start_timer();
-    FSRCNN();
     lap_time("");
 	// printf("\n");
 	// printf("Program di eksekusi pada : ");
