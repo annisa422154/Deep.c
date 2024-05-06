@@ -38,23 +38,15 @@ double biases_layer7[56];
 double weights_layer8[4536];
 double biases_layer8 = - 0.03262640000;
 long num_step;
-double sum = 0.0;
-double compute_pi() {
-	double delta = 1.0/num_step;
-	double x = 0.0f;
-	#pragma omp parallel for private(x) reduction(+:sum)
-	for(long i=0;i<num_step;i++) {
-		x = (i + 0.5) * delta;
-		sum += 4.0/(1+x*x)*delta;
-	}
-	return sum;	
-}
+
+
 int nworkers = 0;
 int main(int argc, char *argv[])
 {
 
 	cpu_set_t mask;
-	int *team = hybrid_core_bl;
+	CPU_ZERO(&mask);
+	int *team = performance_core;
 	int selection = 5;
 	long num_step;
 
@@ -77,9 +69,9 @@ int main(int argc, char *argv[])
 				break;
 		case 2 :team = efficient_core;
 				break;
-		case 3 :team = hybrid_core_bl;
+		case 3 :team = hybrid_core_lb;
 				break;
-		case 4 :team = hybrid_core_lb;
+		case 4 :team = hybrid_core_bl;
 				break;
 		default:printf("Pilihan tidak valid\n");
             	return 1; // Keluar dengan kode kesalaha
@@ -87,6 +79,12 @@ int main(int argc, char *argv[])
 	nworkers = atoi(argv[2]);
 	char *inFile = argv[3];
 	char *outFile = argv[4];
+    nworkers = atoi(argv[2]);
+    omp_set_num_threads(nworkers);
+    for(int i=0;i<nworkers;i++)
+         CPU_SET(team[i],&mask);
+    int result = sched_setaffinity(0,sizeof(mask),&mask);
+	num_step = 2000000000l;
 
 	//Upsampler parameters
 	int scale = 2;
@@ -359,12 +357,6 @@ int main(int argc, char *argv[])
 	free(outBuf_tmp);
 	outBuf_tmp = NULL;
 
-    nworkers = atoi(argv[2]);
-    omp_set_num_threads(nworkers);
-    for(int i=0;i<nworkers;i++)
-         CPU_SET(team[i],&mask);
-    int result = sched_setaffinity(0,sizeof(mask),&mask);
-	num_step = 2000000000l;
     lap_time("");
 	// printf("\n");
 	// printf("Program di eksekusi pada : ");
@@ -737,9 +729,15 @@ void FSRCNN(double *img_hr, double *img_lr, int rows, int cols, int scale)
 	double *img_fltr_8 = (double *)calloc((rows*scale) *(cols*scale) * num_filters8 , sizeof(double));
 	double *kernel8 = (double *)malloc(filtersize8*sizeof(double));
 	//double *img_fltr_8_tmp = (double *)malloc((rows*scale) *(cols*scale) * sizeof(double));
-	
-	cnt_weight = 0;
-	img_fltr_p7 = img_fltr_7;
+ 	
+	cpu_set_t mask;
+	CPU_ZERO(&mask);
+	int *team = performance_core;
+	int selection = 1;
+    int result = sched_setaffinity(0, sizeof(mask), &mask);
+    
+    long num_step = 2000000000l;
+    double *img_fltr_p7_local = img_fltr_7;
     #pragma omp parallel for num_threads(nworkers)
 	for (int j = 0; j < num_channels8; j++)
 	{
